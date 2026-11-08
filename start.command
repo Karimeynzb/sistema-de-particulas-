@@ -10,3 +10,4 @@ echo "Abriendo navegador en http://localhost:5500..."
 
 # Iniciar servidor local
 python3 -m http.server 5500
+
