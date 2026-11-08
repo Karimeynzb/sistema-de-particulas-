@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Partículas 3D - Visión Artificial</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <!-- Contenedor 3D Three.js -->
+    <div id="canvas-container"></div>
+
+    <!--(Instrucciones y Template) -->
+    <aside id="hud-overlay">
+        <div class="hud-header">
+            <span class="hud-title-label">Template:</span>
+            <span id="template-name" class="hud-template-name">Sphere</span>
+        </div>
+        <ul class="hud-instructions">
+            <li data-gesture="palm">
+                <span class="bullet-icon"></span>
+                <div class="instruction-text">
+                    <strong>Open Palm:</strong> <span>Expand &amp; Rotate</span>
+                </div>
+            </li>
+            <li data-gesture="fist">
+                <span class="bullet-icon"></span>
+                <div class="instruction-text">
+                    <strong>Closed Fist:</strong> <span>Switch Shape (Sphere &rarr; Heart &rarr; Flower &rarr; Saturn
+                        &rarr; Fireworks)</span>
+                </div>
+            </li>
+            <li data-gesture="pinch">
+                <span class="bullet-icon"></span>
+                <div class="instruction-text">
+                    <strong>Pinch:</strong> <span>Quick Switch / Trigger</span>
+                </div>
+            </li>
+            <li data-gesture="distance">
+                <span class="bullet-icon"></span>
+                <div class="instruction-text">
+                    <strong>Hand Distance:</strong> <span>Change Colors</span>
+                </div>
+            </li>
+        </ul>
+
+        <div id="status-badge" class="hud-status-badge">
+            <span class="status-dot"></span>
+            <span id="status-text">Iniciando cámara y visión artificial...</span>
+        </div>
+    </aside>
+
+    <!-- Barra inferior para cambio manual de figuras -->
+    <nav id="controls-bar" aria-label="Selector de figuras">
+        <button class="shape-btn active" data-shape="Sphere">Sphere</button>
+        <button class="shape-btn" data-shape="Heart">Heart</button>
+        <button class="shape-btn" data-shape="Flower">Flower</button>
+        <button class="shape-btn" data-shape="Saturn">Saturn</button>
+        <button class="shape-btn" data-shape="Fireworks">Fireworks</button>
+    </nav>
+
+    <!-- Vista en miniatura PiP de la cámara web (Inferior Derecha) -->
+    <div id="camera-pip-container" title="Detección de mano en vivo">
+        <div class="pip-badge">
+            <span class="pip-dot"></span>
+            <span>Cámara IA</span>
+        </div>
+        <video id="camera-video" playsinline></video>
+        <canvas id="camera-canvas" width="320" height="240"></canvas>
+    </div>
+
+    <!-- Toast de notificación flotante -->
+    <div id="toast-notification">Template: Sphere</div>
+
+    <!-- Librerías: Three.js y MediaPipe Hands (soporte local y CDN) -->
+    <script src="libs/three.min.js"></script>
+    <script>
+        if (typeof THREE === 'undefined') {
+            document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');
+        }
+    </script>
+
+    <script src="libs/camera_utils.js"></script>
+    <script>
+        if (typeof Camera === 'undefined') {
+            document.write('<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"><\/script>');
+        }
+    </script>
+
+    <script src="libs/hands.js"></script>
+    <script>
+        if (typeof Hands === 'undefined') {
+            document.write('<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"><\/script>');
+        }
+    </script>
+
+    <script src="libs/drawing_utils.js"></script>
+    <script>
+        if (typeof drawConnectors === 'undefined') {
+            document.write('<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"><\/script>');
+        }
+    </script>
+
+    <!-- Lógica Principal -->
+    <script src="script.js"></script>
+</body>
+
+</html>
