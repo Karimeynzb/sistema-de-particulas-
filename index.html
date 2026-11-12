@@ -9,10 +9,8 @@
 </head>
 
 <body>
-    <!-- Contenedor 3D Three.js -->
     <div id="canvas-container"></div>
 
-    <!-- HUD Superior Izquierdo (Instrucciones y Template) -->
     <aside id="hud-overlay">
         <div class="hud-header">
             <span class="hud-title-label">Template:</span>
@@ -52,7 +50,6 @@
         </div>
     </aside>
 
-    <!-- Barra inferior para cambio manual de figuras / fallback -->
     <nav id="controls-bar" aria-label="Selector de figuras">
         <button class="shape-btn active" data-shape="Sphere">Sphere</button>
         <button class="shape-btn" data-shape="Heart">Heart</button>
@@ -61,7 +58,6 @@
         <button class="shape-btn" data-shape="Fireworks">Fireworks</button>
     </nav>
 
-    <!-- Vista en miniatura PiP de la cámara web (Inferior Derecha) -->
     <div id="camera-pip-container" title="Detección de mano en vivo">
         <div class="pip-badge">
             <span class="pip-dot"></span>
@@ -71,15 +67,11 @@
         <canvas id="camera-canvas" width="320" height="240"></canvas>
     </div>
 
-    <!-- Toast de notificación flotante -->
     <div id="toast-notification">Template: Sphere</div>
 
-    <!-- Librerías: Three.js y MediaPipe Hands -->
     <script src="libs/three.min.js"></script>
     <script src="libs/hands.js"></script>
     <script src="libs/drawing_utils.js"></script>
-
-    <!-- Lógica Principal -->
     <script src="script.js"></script>
 </body>
 

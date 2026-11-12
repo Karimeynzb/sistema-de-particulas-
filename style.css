@@ -24,7 +24,6 @@ html {
   z-index: 1;
 }
 
-/* Overlay UI - Top Left */
 #hud-overlay {
   position: absolute;
   top: 24px;
@@ -100,7 +99,6 @@ html {
   color: #cbd5e1;
 }
 
-/* Gesture trigger highlight state */
 .hud-instructions li.active .bullet-icon {
   background: #10b981;
   box-shadow: 0 0 12px #10b981;
@@ -135,7 +133,6 @@ html {
 }
 
 @keyframes pulse {
-
   0%,
   100% {
     opacity: 1;

@@ -1,14 +1,7 @@
-/**
- * Sistema de Partículas 3D con Inteligencia Artificial y Visión por Computadora
- * Renderizado en Three.js con detección de manos en tiempo real
- */
-
-// --- CONFIGURACIÓN GLOBAL ---
 const TOTAL_PARTICLES = 9000;
 const SHAPES = ['Sphere', 'Heart', 'Flower', 'Saturn', 'Fireworks'];
 let currentShapeIndex = 0;
 
-// Estado interactivo controlado por mano / ratón
 const interactionState = {
   scale: 1.0,
   targetScale: 1.0,
@@ -27,7 +20,6 @@ const interactionState = {
   fistCooldown: 700
 };
 
-// --- SONIDOS SINTETIZADOS CON WEB AUDIO API ---
 let audioCtx = null;
 function initAudio() {
   if (!audioCtx) {
@@ -59,11 +51,9 @@ function playMorphSound() {
     osc.start(now);
     osc.stop(now + 0.35);
   } catch (e) {
-    // Silenciado
   }
 }
 
-// --- CONFIGURACIÓN THREE.JS ---
 const container = document.getElementById('canvas-container');
 const scene = new THREE.Scene();
 scene.fog = new THREE.FogExp2(0x050608, 0.0012);
@@ -82,7 +72,6 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 renderer.setClearColor(0x050608, 1);
 container.appendChild(renderer.domElement);
 
-// --- GENERACIÓN DE TEXTURA DE PARTÍCULA BRILLANTE ---
 function createParticleTexture() {
   const canvas = document.createElement('canvas');
   canvas.width = 64;
@@ -103,7 +92,6 @@ function createParticleTexture() {
   return texture;
 }
 
-// --- CREACIÓN DEL SISTEMA DE PARTÍCULAS ---
 const geometry = new THREE.BufferGeometry();
 const currentPositions = new Float32Array(TOTAL_PARTICLES * 3);
 const targetPositions = new Float32Array(TOTAL_PARTICLES * 3);
@@ -130,9 +118,6 @@ const material = new THREE.PointsMaterial({
 const particleSystem = new THREE.Points(geometry, material);
 scene.add(particleSystem);
 
-// --- FUNCIONES MATEMÁTICAS PARA LAS FORMAS ---
-
-// 1. Esfera (Sphere)
 function generateSpherePositions(arr, colorArr) {
   const radius = 80;
   for (let i = 0; i < TOTAL_PARTICLES; i++) {
@@ -155,7 +140,6 @@ function generateSpherePositions(arr, colorArr) {
   }
 }
 
-// 2. Corazón 3D (Heart)
 function generateHeartPositions(arr, colorArr) {
   for (let i = 0; i < TOTAL_PARTICLES; i++) {
     const t = Math.PI * 2 * Math.random();
@@ -176,7 +160,6 @@ function generateHeartPositions(arr, colorArr) {
   }
 }
 
-// 3. Flor 3D (Flower)
 function generateFlowerPositions(arr, colorArr) {
   const petals = 3;
   for (let i = 0; i < TOTAL_PARTICLES; i++) {
@@ -201,7 +184,6 @@ function generateFlowerPositions(arr, colorArr) {
   }
 }
 
-// 4. Saturno (Saturn)
 function generateSaturnPositions(arr, colorArr) {
   const planetParticles = Math.floor(TOTAL_PARTICLES * 0.38);
   const ringParticles = TOTAL_PARTICLES - planetParticles;
@@ -246,7 +228,6 @@ function generateSaturnPositions(arr, colorArr) {
   }
 }
 
-// 5. Fuegos Artificiales (Fireworks)
 function generateFireworksPositions(arr, colorArr) {
   for (let i = 0; i < TOTAL_PARTICLES; i++) {
     const theta = Math.random() * Math.PI * 2;
@@ -277,11 +258,9 @@ const SHAPE_GENERATORS = {
   'Fireworks': generateFireworksPositions
 };
 
-// Inicializar posiciones y colores iniciales
 generateSpherePositions(currentPositions, colors);
 generateSpherePositions(targetPositions, baseColors);
 
-// --- CAMBIO DE FORMA (TEMPLATE) ---
 function setShape(shapeName) {
   const index = SHAPES.indexOf(shapeName);
   if (index === -1) return;
@@ -319,7 +298,6 @@ function showToast(message) {
   }, 1400);
 }
 
-// --- MEDIAPIPE HAND TRACKING & VISIÓN ARTIFICIAL ---
 const videoElement = document.getElementById('camera-video');
 const canvasElement = document.getElementById('camera-canvas');
 const canvasCtx = canvasElement.getContext('2d');
@@ -338,14 +316,12 @@ function highlightGestureUI(gestureName) {
 }
 
 function onResults(results) {
-  // Limpiar canvas overlay
   canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
 
   if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
     interactionState.handDetected = true;
     const landmarks = results.multiHandLandmarks[0];
 
-    // Dibujar esqueleto de la mano sobre el video
     if (typeof drawConnectors === 'function' && typeof drawLandmarks === 'function') {
       const connections = window.HAND_CONNECTIONS || (typeof HAND_CONNECTIONS !== 'undefined' ? HAND_CONNECTIONS : []);
       drawConnectors(canvasCtx, landmarks, connections, { color: '#00f0ff', lineWidth: 2 });
@@ -359,11 +335,9 @@ function onResults(results) {
       y: (wrist.y + middleMCP.y) / 2
     };
 
-    // Orientación natural espejada
     interactionState.handX = (0.5 - palmCenter.x) * 2;
     interactionState.handY = (palmCenter.y - 0.5) * 2;
 
-    // Gesto de Pellizco (Pinch)
     const thumbTip = landmarks[4];
     const indexTip = landmarks[8];
     const pinchDist = Math.hypot(thumbTip.x - indexTip.x, thumbTip.y - indexTip.y);
@@ -380,7 +354,6 @@ function onResults(results) {
       interactionState.isPinching = false;
     }
 
-    // Distancia promedio de las 5 puntas a la muñeca
     const tips = [4, 8, 12, 16, 20];
     let totalDistToWrist = 0;
     tips.forEach(idx => {
@@ -389,14 +362,11 @@ function onResults(results) {
     });
     const avgTipDist = totalDistToWrist / tips.length;
 
-    // Distancia física estimada de la mano a la cámara
     const handPhysicalSize = Math.hypot(wrist.x - middleMCP.x, wrist.y - middleMCP.y);
     interactionState.hueOffset = (handPhysicalSize * 4.5) % 1.0;
 
-    // Puño cerrado (Closed Fist) vs Palma abierta (Open Palm)
     if (!interactionState.isPinching) {
       if (avgTipDist < 0.24) {
-        // PUÑO CERRADO -> CAMBIO DE FIGURA
         interactionState.isFist = true;
         interactionState.isOpenPalm = false;
         interactionState.targetScale = 1.0;
@@ -409,7 +379,6 @@ function onResults(results) {
         }
         interactionState.wasFist = true;
       } else if (avgTipDist > 0.36) {
-        // PALMA ABIERTA -> EXPANSIÓN Y GIRO
         interactionState.isOpenPalm = true;
         interactionState.isFist = false;
         interactionState.wasFist = false;
@@ -417,7 +386,6 @@ function onResults(results) {
         interactionState.rotationSpeedMultiplier = 2.2;
         highlightGestureUI('palm');
       } else {
-        // Estado neutro
         interactionState.isFist = false;
         interactionState.wasFist = false;
         interactionState.isOpenPalm = false;
@@ -439,7 +407,6 @@ function onResults(results) {
   }
 }
 
-// Inicialización de cámara y MediaPipe Hands sin bloqueos
 async function initHandTracking() {
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
     if (statusText) statusText.textContent = 'Cámara no soportada en este entorno (Usa ratón/teclas)';
@@ -454,7 +421,6 @@ async function initHandTracking() {
 
   if (statusText) statusText.textContent = 'Iniciando cámara web...';
 
-  // 1. Obtener stream nativo con restricciones ideales
   try {
     const stream = await navigator.mediaDevices.getUserMedia({
       video: {
@@ -485,7 +451,6 @@ async function initHandTracking() {
 
   if (statusText) statusText.textContent = 'Cámara activa. Cargando IA...';
 
-  // 2. Cargar MediaPipe Hands (prioriza archivos locales de libs/)
   let hands;
   try {
     hands = new Hands({
@@ -524,7 +489,6 @@ async function initHandTracking() {
 
   if (statusText) statusText.textContent = 'Buscando mano frente a la cámara...';
 
-  // 3. Procesar frames continuamente sin bloquear Three.js
   let isProcessing = false;
   async function processCameraFrame() {
     if (videoElement.readyState >= 2 && !videoElement.paused && !isProcessing) {
@@ -532,7 +496,6 @@ async function initHandTracking() {
       try {
         await hands.send({ image: videoElement });
       } catch (e) {
-        // Prevenir cuelgues ante frames momentáneamente inválidos
       } finally {
         isProcessing = false;
       }
@@ -542,7 +505,6 @@ async function initHandTracking() {
   requestAnimationFrame(processCameraFrame);
 }
 
-// --- CONTROLES DE RATÓN / TÁCTIL (FALLBACK) ---
 let isMouseDown = false;
 let mouseX = 0;
 let mouseY = 0;
@@ -601,7 +563,6 @@ document.querySelectorAll('.shape-btn').forEach((btn) => {
   });
 });
 
-// --- BUCLE DE ANIMACIÓN PRINCIPAL (INMEDIATO) ---
 const clock = new THREE.Clock();
 
 function animate() {
@@ -677,7 +638,6 @@ function onWindowResize() {
 
 window.addEventListener('resize', onWindowResize);
 
-// --- ARRANQUE SEGURO ---
 function startApp() {
   onWindowResize();
   animate();
