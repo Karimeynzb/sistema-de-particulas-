@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Partículas 3D con Gestos</title>
+    <!-- Enlace al archivo css -->
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Librerias utilizadas para el proyecto -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+</head>
+<body>
+
+
+    <canvas id="webgl-canvas"></canvas>
+    <div class="video-container">
+        <video class="input_video" autoplay playsinline muted></video>
+    </div>
+
+    <!-- instrucciones y estado -->
+    <div id="ui-container">
+       <h1 id="tpl">Sistema de particulas 3D </h1>
+  ✋ Palma abierta: expandir y rotar<br>
+  ✊ Puño cerrado: implosión<br>
+  🤏 Pellizco: cambiar figura<br>
+  👐 Distancia entre manos: cambiar color
+</div>
+
+    <!-- Enlace al archivo de lógica JavaScript externo -->
+    <script src="script.js"></script>
+</body>
+</html>
