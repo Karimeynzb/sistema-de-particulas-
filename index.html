@@ -12,7 +12,7 @@
     <!-- Contenedor 3D Three.js -->
     <div id="canvas-container"></div>
 
-    <!--(Instrucciones y Template) -->
+    <!-- HUD Superior Izquierdo (Instrucciones y Template) -->
     <aside id="hud-overlay">
         <div class="hud-header">
             <span class="hud-title-label">Template:</span>
@@ -52,7 +52,7 @@
         </div>
     </aside>
 
-    <!-- Barra inferior para cambio manual de figuras -->
+    <!-- Barra inferior para cambio manual de figuras / fallback -->
     <nav id="controls-bar" aria-label="Selector de figuras">
         <button class="shape-btn active" data-shape="Sphere">Sphere</button>
         <button class="shape-btn" data-shape="Heart">Heart</button>
@@ -67,41 +67,17 @@
             <span class="pip-dot"></span>
             <span>Cámara IA</span>
         </div>
-        <video id="camera-video" playsinline></video>
+        <video id="camera-video" playsinline muted autoplay></video>
         <canvas id="camera-canvas" width="320" height="240"></canvas>
     </div>
 
     <!-- Toast de notificación flotante -->
     <div id="toast-notification">Template: Sphere</div>
 
-    <!-- Librerías: Three.js y MediaPipe Hands (soporte local y CDN) -->
+    <!-- Librerías: Three.js y MediaPipe Hands -->
     <script src="libs/three.min.js"></script>
-    <script>
-        if (typeof THREE === 'undefined') {
-            document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');
-        }
-    </script>
-
-    <script src="libs/camera_utils.js"></script>
-    <script>
-        if (typeof Camera === 'undefined') {
-            document.write('<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"><\/script>');
-        }
-    </script>
-
     <script src="libs/hands.js"></script>
-    <script>
-        if (typeof Hands === 'undefined') {
-            document.write('<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"><\/script>');
-        }
-    </script>
-
     <script src="libs/drawing_utils.js"></script>
-    <script>
-        if (typeof drawConnectors === 'undefined') {
-            document.write('<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"><\/script>');
-        }
-    </script>
 
     <!-- Lógica Principal -->
     <script src="script.js"></script>

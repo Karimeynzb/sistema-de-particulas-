@@ -1,7 +1,14 @@
+/**
+ * Sistema de Partículas 3D con Inteligencia Artificial y Visión por Computadora
+ * Renderizado en Three.js con detección de manos en tiempo real
+ */
+
+// --- CONFIGURACIÓN GLOBAL ---
 const TOTAL_PARTICLES = 9000;
 const SHAPES = ['Sphere', 'Heart', 'Flower', 'Saturn', 'Fireworks'];
 let currentShapeIndex = 0;
 
+// Estado interactivo controlado por mano / ratón
 const interactionState = {
   scale: 1.0,
   targetScale: 1.0,
@@ -20,6 +27,7 @@ const interactionState = {
   fistCooldown: 700
 };
 
+// --- SONIDOS SINTETIZADOS CON WEB AUDIO API ---
 let audioCtx = null;
 function initAudio() {
   if (!audioCtx) {
@@ -51,27 +59,30 @@ function playMorphSound() {
     osc.start(now);
     osc.stop(now + 0.35);
   } catch (e) {
+    // Silenciado
   }
 }
 
+// --- CONFIGURACIÓN THREE.JS ---
 const container = document.getElementById('canvas-container');
 const scene = new THREE.Scene();
 scene.fog = new THREE.FogExp2(0x050608, 0.0012);
 
 const camera = new THREE.PerspectiveCamera(
   60,
-  window.innerWidth / window.innerHeight,
+  Math.max(window.innerWidth, 1) / Math.max(window.innerHeight, 1),
   1,
   3000
 );
 camera.position.z = 280;
 
-const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: 'high-performance' });
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 renderer.setClearColor(0x050608, 1);
 container.appendChild(renderer.domElement);
 
+// --- GENERACIÓN DE TEXTURA DE PARTÍCULA BRILLANTE ---
 function createParticleTexture() {
   const canvas = document.createElement('canvas');
   canvas.width = 64;
@@ -81,24 +92,23 @@ function createParticleTexture() {
   const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
   gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
   gradient.addColorStop(0.2, 'rgba(220, 245, 255, 0.9)');
-  gradient.addColorStop(0.5, 'rgba(70, 160, 255, 0.4)');
+  gradient.addColorStop(0.5, 'rgba(70, 160, 255, 0.45)');
   gradient.addColorStop(0.8, 'rgba(0, 110, 255, 0.15)');
   gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
 
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, 64, 64);
 
-  const texture = new THREE.Texture(canvas);
-  texture.needsUpdate = true;
+  const texture = new THREE.CanvasTexture(canvas);
   return texture;
 }
 
+// --- CREACIÓN DEL SISTEMA DE PARTÍCULAS ---
 const geometry = new THREE.BufferGeometry();
 const currentPositions = new Float32Array(TOTAL_PARTICLES * 3);
 const targetPositions = new Float32Array(TOTAL_PARTICLES * 3);
 const colors = new Float32Array(TOTAL_PARTICLES * 3);
 const baseColors = new Float32Array(TOTAL_PARTICLES * 3);
-const particleVelocities = new Float32Array(TOTAL_PARTICLES * 3);
 const particleSeeds = new Float32Array(TOTAL_PARTICLES);
 
 for (let i = 0; i < TOTAL_PARTICLES; i++) {
@@ -120,6 +130,9 @@ const material = new THREE.PointsMaterial({
 const particleSystem = new THREE.Points(geometry, material);
 scene.add(particleSystem);
 
+// --- FUNCIONES MATEMÁTICAS PARA LAS FORMAS ---
+
+// 1. Esfera (Sphere)
 function generateSpherePositions(arr, colorArr) {
   const radius = 80;
   for (let i = 0; i < TOTAL_PARTICLES; i++) {
@@ -142,6 +155,7 @@ function generateSpherePositions(arr, colorArr) {
   }
 }
 
+// 2. Corazón 3D (Heart)
 function generateHeartPositions(arr, colorArr) {
   for (let i = 0; i < TOTAL_PARTICLES; i++) {
     const t = Math.PI * 2 * Math.random();
@@ -162,6 +176,7 @@ function generateHeartPositions(arr, colorArr) {
   }
 }
 
+// 3. Flor 3D (Flower)
 function generateFlowerPositions(arr, colorArr) {
   const petals = 3;
   for (let i = 0; i < TOTAL_PARTICLES; i++) {
@@ -186,6 +201,7 @@ function generateFlowerPositions(arr, colorArr) {
   }
 }
 
+// 4. Saturno (Saturn)
 function generateSaturnPositions(arr, colorArr) {
   const planetParticles = Math.floor(TOTAL_PARTICLES * 0.38);
   const ringParticles = TOTAL_PARTICLES - planetParticles;
@@ -199,7 +215,7 @@ function generateSaturnPositions(arr, colorArr) {
     arr[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
     arr[i * 3 + 2] = r * Math.cos(phi);
 
-    const color = new THREE.Color().setHSL(0.12, 0.85, 0.65); // Tono ámbar/dorado
+    const color = new THREE.Color().setHSL(0.12, 0.85, 0.65);
     colorArr[i * 3] = color.r;
     colorArr[i * 3 + 1] = color.g;
     colorArr[i * 3 + 2] = color.b;
@@ -230,6 +246,7 @@ function generateSaturnPositions(arr, colorArr) {
   }
 }
 
+// 5. Fuegos Artificiales (Fireworks)
 function generateFireworksPositions(arr, colorArr) {
   for (let i = 0; i < TOTAL_PARTICLES; i++) {
     const theta = Math.random() * Math.PI * 2;
@@ -260,9 +277,11 @@ const SHAPE_GENERATORS = {
   'Fireworks': generateFireworksPositions
 };
 
+// Inicializar posiciones y colores iniciales
 generateSpherePositions(currentPositions, colors);
 generateSpherePositions(targetPositions, baseColors);
 
+// --- CAMBIO DE FORMA (TEMPLATE) ---
 function setShape(shapeName) {
   const index = SHAPES.indexOf(shapeName);
   if (index === -1) return;
@@ -300,6 +319,7 @@ function showToast(message) {
   }, 1400);
 }
 
+// --- MEDIAPIPE HAND TRACKING & VISIÓN ARTIFICIAL ---
 const videoElement = document.getElementById('camera-video');
 const canvasElement = document.getElementById('camera-canvas');
 const canvasCtx = canvasElement.getContext('2d');
@@ -318,15 +338,15 @@ function highlightGestureUI(gestureName) {
 }
 
 function onResults(results) {
-  canvasCtx.save();
+  // Limpiar canvas overlay
   canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-  canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
 
   if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
     interactionState.handDetected = true;
     const landmarks = results.multiHandLandmarks[0];
 
-    if (window.drawConnectors && window.drawLandmarks) {
+    // Dibujar esqueleto de la mano sobre el video
+    if (typeof drawConnectors === 'function' && typeof drawLandmarks === 'function') {
       const connections = window.HAND_CONNECTIONS || (typeof HAND_CONNECTIONS !== 'undefined' ? HAND_CONNECTIONS : []);
       drawConnectors(canvasCtx, landmarks, connections, { color: '#00f0ff', lineWidth: 2 });
       drawLandmarks(canvasCtx, landmarks, { color: '#ffffff', fillColor: '#ff007b', radius: 2.5 });
@@ -339,10 +359,11 @@ function onResults(results) {
       y: (wrist.y + middleMCP.y) / 2
     };
 
-    // Mapear posición de mano a rotación/inclinación 3D natural (espejada)
+    // Orientación natural espejada
     interactionState.handX = (0.5 - palmCenter.x) * 2;
     interactionState.handY = (palmCenter.y - 0.5) * 2;
 
+    // Gesto de Pellizco (Pinch)
     const thumbTip = landmarks[4];
     const indexTip = landmarks[8];
     const pinchDist = Math.hypot(thumbTip.x - indexTip.x, thumbTip.y - indexTip.y);
@@ -359,6 +380,7 @@ function onResults(results) {
       interactionState.isPinching = false;
     }
 
+    // Distancia promedio de las 5 puntas a la muñeca
     const tips = [4, 8, 12, 16, 20];
     let totalDistToWrist = 0;
     tips.forEach(idx => {
@@ -367,11 +389,14 @@ function onResults(results) {
     });
     const avgTipDist = totalDistToWrist / tips.length;
 
+    // Distancia física estimada de la mano a la cámara
     const handPhysicalSize = Math.hypot(wrist.x - middleMCP.x, wrist.y - middleMCP.y);
     interactionState.hueOffset = (handPhysicalSize * 4.5) % 1.0;
 
+    // Puño cerrado (Closed Fist) vs Palma abierta (Open Palm)
     if (!interactionState.isPinching) {
       if (avgTipDist < 0.24) {
+        // PUÑO CERRADO -> CAMBIO DE FIGURA
         interactionState.isFist = true;
         interactionState.isOpenPalm = false;
         interactionState.targetScale = 1.0;
@@ -384,6 +409,7 @@ function onResults(results) {
         }
         interactionState.wasFist = true;
       } else if (avgTipDist > 0.36) {
+        // PALMA ABIERTA -> EXPANSIÓN Y GIRO
         interactionState.isOpenPalm = true;
         interactionState.isFist = false;
         interactionState.wasFist = false;
@@ -391,6 +417,7 @@ function onResults(results) {
         interactionState.rotationSpeedMultiplier = 2.2;
         highlightGestureUI('palm');
       } else {
+        // Estado neutro
         interactionState.isFist = false;
         interactionState.wasFist = false;
         interactionState.isOpenPalm = false;
@@ -407,47 +434,115 @@ function onResults(results) {
     interactionState.targetScale = 1.0;
     interactionState.rotationSpeedMultiplier = 1.0;
     highlightGestureUI(null);
-    if (statusText) statusText.textContent = 'Buscando mano en cámara...';
+    if (statusText) statusText.textContent = 'Buscando mano frente a la cámara...';
     if (statusBadge) statusBadge.style.borderColor = 'rgba(0, 240, 255, 0.3)';
   }
-  canvasCtx.restore();
 }
 
-function initHandTracking() {
-  if (typeof Hands === 'undefined') {
-    console.warn('MediaPipe Hands no cargado aún. Reintentando...');
-    setTimeout(initHandTracking, 500);
+// Inicialización de cámara y MediaPipe Hands sin bloqueos
+async function initHandTracking() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    if (statusText) statusText.textContent = 'Cámara no soportada en este entorno (Usa ratón/teclas)';
     return;
   }
 
-  const hands = new Hands({
-    locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
-  });
-
-  hands.setOptions({
-    maxNumHands: 1,
-    modelComplexity: 1,
-    minDetectionConfidence: 0.65,
-    minTrackingConfidence: 0.6
-  });
-
-  hands.onResults(onResults);
-
-  if (typeof Camera !== 'undefined') {
-    const mpCamera = new Camera(videoElement, {
-      onFrame: async () => {
-        await hands.send({ image: videoElement });
-      },
-      width: 320,
-      height: 240
-    });
-    mpCamera.start().catch((err) => {
-      console.warn('Error al iniciar cámara web:', err);
-      if (statusText) statusText.textContent = 'Cámara no disponible (Usa ratón/táctil)';
-    });
+  if (typeof Hands === 'undefined') {
+    if (statusText) statusText.textContent = 'Cargando modelo de IA...';
+    setTimeout(initHandTracking, 400);
+    return;
   }
+
+  if (statusText) statusText.textContent = 'Iniciando cámara web...';
+
+  // 1. Obtener stream nativo con restricciones ideales
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: 'user',
+        width: { ideal: 640 },
+        height: { ideal: 480 }
+      },
+      audio: false
+    });
+
+    videoElement.srcObject = stream;
+    videoElement.muted = true;
+    videoElement.setAttribute('playsinline', '');
+    videoElement.setAttribute('autoplay', '');
+
+    await videoElement.play().catch(() => {});
+  } catch (err) {
+    console.warn('Error al activar cámara:', err);
+    if (statusText) {
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        statusText.textContent = 'Permiso de cámara denegado (Revisa Privacidad o usa ratón/teclas)';
+      } else {
+        statusText.textContent = 'Cámara no disponible (Usa ratón/teclas)';
+      }
+    }
+    return;
+  }
+
+  if (statusText) statusText.textContent = 'Cámara activa. Cargando IA...';
+
+  // 2. Cargar MediaPipe Hands (prioriza archivos locales de libs/)
+  let hands;
+  try {
+    hands = new Hands({
+      locateFile: (file) => `libs/${file}`
+    });
+
+    hands.setOptions({
+      maxNumHands: 1,
+      modelComplexity: 1,
+      minDetectionConfidence: 0.6,
+      minTrackingConfidence: 0.5
+    });
+
+    hands.onResults(onResults);
+    await hands.initialize();
+  } catch (err) {
+    console.warn('Fallo con libs locales, intentando CDN de respaldo:', err);
+    try {
+      hands = new Hands({
+        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+      });
+      hands.setOptions({
+        maxNumHands: 1,
+        modelComplexity: 1,
+        minDetectionConfidence: 0.6,
+        minTrackingConfidence: 0.5
+      });
+      hands.onResults(onResults);
+      await hands.initialize();
+    } catch (err2) {
+      console.error('No se pudo inicializar MediaPipe Hands:', err2);
+      if (statusText) statusText.textContent = 'Visión IA no disponible (Usa ratón/teclas)';
+      return;
+    }
+  }
+
+  if (statusText) statusText.textContent = 'Buscando mano frente a la cámara...';
+
+  // 3. Procesar frames continuamente sin bloquear Three.js
+  let isProcessing = false;
+  async function processCameraFrame() {
+    if (videoElement.readyState >= 2 && !videoElement.paused && !isProcessing) {
+      isProcessing = true;
+      try {
+        await hands.send({ image: videoElement });
+      } catch (e) {
+        // Prevenir cuelgues ante frames momentáneamente inválidos
+      } finally {
+        isProcessing = false;
+      }
+    }
+    requestAnimationFrame(processCameraFrame);
+  }
+  requestAnimationFrame(processCameraFrame);
 }
 
+// --- CONTROLES DE RATÓN / TÁCTIL (FALLBACK) ---
 let isMouseDown = false;
 let mouseX = 0;
 let mouseY = 0;
@@ -506,6 +601,7 @@ document.querySelectorAll('.shape-btn').forEach((btn) => {
   });
 });
 
+// --- BUCLE DE ANIMACIÓN PRINCIPAL (INMEDIATO) ---
 const clock = new THREE.Clock();
 
 function animate() {
@@ -571,14 +667,25 @@ function animate() {
   renderer.render(scene, camera);
 }
 
-window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
+function onWindowResize() {
+  const w = window.innerWidth || 800;
+  const h = window.innerHeight || 600;
+  camera.aspect = w / h;
   camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-});
+  renderer.setSize(w, h);
+}
 
-window.addEventListener('DOMContentLoaded', () => {
-  initHandTracking();
+window.addEventListener('resize', onWindowResize);
+
+// --- ARRANQUE SEGURO ---
+function startApp() {
+  onWindowResize();
   animate();
-});
+  initHandTracking();
+}
 
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', startApp);
+} else {
+  startApp();
+}
